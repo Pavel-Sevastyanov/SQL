@@ -1,11 +1,8 @@
-SELECT Members.id, 
-	   name,
-       CASE
-		   WHEN IFNULL(100 * COUNT(visit_id) / COUNT(Visits.id), 0) >= 80 THEN 'Diamond'
-           WHEN IFNULL(100 * COUNT(visit_id) / COUNT(Visits.id), 0) >= 50 THEN 'Gold'
-           WHEN COUNT(Visits.id) = 0 THEN 'Bronze'           
-           WHEN IFNULL(100 * COUNT(visit_id) / COUNT(Visits.id), 0) BETWEEN 0 AND 50 THEN 'Silver'
-	   END AS status
-FROM Members LEFT OUTER JOIN Visits ON member_id = Members.id
-		     LEFT OUTER JOIN Purchases ON Visits.id = visit_id
-GROUP BY Members.id, name
+SELECT request_at AS day,
+	   ROUND(
+			 SUM(status IN ('cancelled_by_client', 'cancelled_by_driver')) / COUNT(*), 2) AS cancellation_rate
+FROM Trips LEFT OUTER JOIN Users AS U1 ON client_id = U1.id 
+		   LEFT OUTER JOIN Users AS U2 ON driver_id = U2.id 
+WHERE U1.banned = 'no' AND U2.banned = 'no'
+GROUP BY request_at
+HAVING DAY(request_at) BETWEEN 1 AND 3
